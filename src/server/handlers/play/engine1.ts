@@ -908,6 +908,7 @@ handler.xt(Handle.UpdateIglooMusic2007, (client, music) => {
 
 // Logging in
 handler.post('/php/login.php', (server, body) => {
+  // TODO: add password
   const { Username } = body;
 
   if (server.settings.no_create_via_login && !server.penguinExists(Username)) {

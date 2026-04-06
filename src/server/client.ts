@@ -641,12 +641,13 @@ export class Server {
   untrackPlayer(id: number): void {
     this._playersById.delete(id);
   }
-  getPenguinFromName (name: string): Penguin {
+  getPenguinFromName (name: string, password?: string): Penguin {
     let data = db.get<PenguinData>(Databases.Penguins, 'name', name);
     const date = this.getVirtualDate(0).getTime();
 
     if (data === undefined) {
       data = Client.create(name, 1, {
+        password,
         is_member: this.settings.always_member,
         virtualRegistrationTimestamp: date
       });
@@ -1141,8 +1142,8 @@ export class Client {
     }
   }
 
-  setPenguinFromName (name: string): void {
-    this._penguin = this.server.getPenguinFromName(name)
+  setPenguinFromName (name: string, password: string): void {
+    this._penguin = this.server.getPenguinFromName(name, password)
     this.checkSpecialName();
 
     this._server.trackPlayer(this.penguin.id, this);

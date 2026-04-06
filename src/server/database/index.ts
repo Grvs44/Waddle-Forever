@@ -429,6 +429,7 @@ export type RainbowPuffleStage = '0' | '1' | '2' | '3' | 'bonus';
 
 export interface PenguinData {
   name: string
+  password?: string
   is_member: boolean
   is_agent: boolean
   mascot: number

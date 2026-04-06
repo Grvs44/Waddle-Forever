@@ -31,8 +31,9 @@ function generateSessionId() {
   return String(num);
 }
 
-function createPenguin(username: string, color: number, server: Server) {
+function createPenguin(username: string, color: number, server: Server, password?: string) {
   Client.create(username, color, {
+    password,
     is_member: server.settings.always_member,
     virtualRegistrationTimestamp: server.getVirtualDate(0).getTime()
   });
@@ -98,7 +99,8 @@ handler.post('/create_account/create_account.php', (server, body) => {
       if (session.username.length < 1) {
         return '';
       }
-      createPenguin(session.username, session.color, server);
+      // TODO: convert password to the form used in log-in (hashed?)
+      createPenguin(session.username, session.color, server, body.password);
       res += 'success=1';
       break;
   }
@@ -112,7 +114,7 @@ handler.post('/php/join.php', (server, body) => {
     return 'e=700';
   }
 
-  createPenguin(name, Number(body.Colour), server);
+  createPenguin(name, Number(body.Colour), server, body.Password);
 
   return 'e=0';
 });

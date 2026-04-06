@@ -1,27 +1,45 @@
 import { isPositiveInteger } from '../common/utils';
-import db, { PenguinData, PlayerPuffle, Stampbook, RainbowPuffleStage, Mail, Igloo, parseJsonSet, parseJsonRows, parseJsonMap, dumpJsonSet, dumpJsonRows, dumpJsonMap, isRainbowStage, Databases } from './database';
+import db, {
+  PenguinData,
+  PlayerPuffle,
+  Stampbook,
+  RainbowPuffleStage,
+  Mail,
+  Igloo,
+  parseJsonSet,
+  parseJsonRows,
+  parseJsonMap,
+  dumpJsonSet,
+  dumpJsonRows,
+  dumpJsonMap,
+  isRainbowStage,
+  Databases,
+} from './database';
 import { CardJitsuProgress } from './game-logic/ninja-progress';
 import { PUFFLE_ITEMS } from './game-logic/puffle-item';
 
 export type PenguinEquipped = {
-  color: number
-  head: number
-  face: number
-  neck: number
-  body: number
-  hand: number
-  feet: number
-  pin: number
-  background: number  
-}
+  color: number;
+  head: number;
+  face: number;
+  neck: number;
+  body: number;
+  hand: number;
+  feet: number;
+  pin: number;
+  background: number;
+};
 
 export type PenguinEquipmentSlot = keyof PenguinEquipped;
 
-export type DefaultPenguinParams = Partial<Pick<PenguinData, 'is_member' | 'virtualRegistrationTimestamp'>>;
+export type DefaultPenguinParams = Partial<
+  Pick<PenguinData, 'password' | 'is_member' | 'virtualRegistrationTimestamp'>
+>;
 
 export class Penguin {
   private _id: number;
   private _name: string;
+  private _password?: string;
   private _isMember: boolean;
   private _isAgent: boolean;
   private _mascot: number;
@@ -44,7 +62,7 @@ export class Penguin {
     currentTask: number;
     latestTaskCompletionTime?: number;
     coinsCollected: Set<RainbowPuffleStage>;
-  }
+  };
   private _furnitureInventory: Map<number, number>;
   private _iglooTypes: Set<number>;
   private _iglooLocations: Set<number>;
@@ -74,6 +92,7 @@ export class Penguin {
   constructor(id: number, data: PenguinData) {
     this._id = id;
     this._name = data.name;
+    this._password = data.password;
     this._isMember = data.is_member;
     this._isAgent = data.is_agent;
     this._mascot = data.mascot;
@@ -86,7 +105,7 @@ export class Penguin {
       hand: data.hand,
       feet: data.feet,
       pin: data.pin,
-      background: data.background
+      background: data.background,
     };
     this._coins = data.coins;
     this._registrationTimestamp = data.registration_date;
@@ -100,21 +119,30 @@ export class Penguin {
     this._puffleItems = parseJsonMap(data.puffleItems, true);
     this._hasDug = data.hasDug;
     this._treasureFinds = data.treasureFinds;
-    this._rainbow = {
+    ((this._rainbow = {
       adoptability: data.rainbow.adoptability,
       currentTask: data.rainbow.currentTask,
       latestTaskCompletionTime: data.rainbow.latestTaskCompletionTime,
-      coinsCollected: parseJsonSet(data.rainbow.coinsCollected.filter<RainbowPuffleStage>(((value): value is RainbowPuffleStage => {
-        return isRainbowStage(value);
-      })))
-    },
-    this._furnitureInventory = parseJsonMap(data.furniture, true);
+      coinsCollected: parseJsonSet(
+        data.rainbow.coinsCollected.filter<RainbowPuffleStage>(
+          (value): value is RainbowPuffleStage => {
+            return isRainbowStage(value);
+          },
+        ),
+      ),
+    }),
+      (this._furnitureInventory = parseJsonMap(data.furniture, true)));
     this._iglooTypes = parseJsonSet(data.iglooTypes);
     this._iglooLocations = parseJsonSet(data.iglooLocations);
     this._iglooFloorings = parseJsonSet(data.iglooFloorings);
-    this._buddies = new Set<number>((data.buddies ?? []).map((id) => Number(id)));
+    this._buddies = new Set<number>(
+      (data.buddies ?? []).map((id) => Number(id)),
+    );
     this._mailSeq = data.mailSeq;
-    this._puffleLaunchGameData = Buffer.from(data.puffleLaunchGameData ?? '', 'base64');
+    this._puffleLaunchGameData = Buffer.from(
+      data.puffleLaunchGameData ?? '',
+      'base64',
+    );
     this._mail = data.mail;
     this._igloo = data.igloo;
     this._igloos = parseJsonRows(data.igloos);
@@ -123,7 +151,11 @@ export class Penguin {
     this._careerMedals = data.careerMedals;
     this._nuggets = data.nuggets;
     this._cards = parseJsonMap(data.cards, true);
-    this._cardProgress = new CardJitsuProgress(data.cardProgress, data.senseiAttempts, data.isNinja);
+    this._cardProgress = new CardJitsuProgress(
+      data.cardProgress,
+      data.senseiAttempts,
+      data.isNinja,
+    );
     this._cardWins = data.cardWins;
     this._battleOfDoom = data.battleOfDoom;
     this._virtualRegistrationTimestamp = data.virtualRegistrationTimestamp;
@@ -138,6 +170,7 @@ export class Penguin {
   serialize(): PenguinData {
     return {
       name: this._name,
+      password: this._password,
       is_member: this._isMember,
       is_agent: this._isAgent,
       mascot: this._mascot,
@@ -166,7 +199,7 @@ export class Penguin {
         adoptability: this._rainbow.adoptability,
         currentTask: this._rainbow.currentTask,
         latestTaskCompletionTime: this._rainbow.latestTaskCompletionTime,
-        coinsCollected: dumpJsonSet(this._rainbow.coinsCollected)
+        coinsCollected: dumpJsonSet(this._rainbow.coinsCollected),
       },
       furniture: dumpJsonMap(this._furnitureInventory),
       iglooFloorings: dumpJsonSet(this._iglooFloorings),
@@ -194,8 +227,8 @@ export class Penguin {
       safeChat: this._safeChat,
       fireNinja: this._isFireNinja,
       waterNinja: this._isWaterNinja,
-      snowNinja: this._isSnowNinja
-    }
+      snowNinja: this._isSnowNinja,
+    };
   }
 
   get id() {
@@ -310,6 +343,11 @@ export class Penguin {
     this._name = name;
   }
 
+  /** Return `true` if the given password is correct */
+  checkPassword(password: string): boolean {
+    return this._password === undefined || this._password === password;
+  }
+
   swapMember(): void {
     this._isMember = !this._isMember;
   }
@@ -338,7 +376,7 @@ export class Penguin {
     return this._inventory.has(item);
   }
 
-  addCoins (amount: number): void {
+  addCoins(amount: number): void {
     this._coins += amount;
   }
 
@@ -346,8 +384,8 @@ export class Penguin {
     this._iglooTypes.add(type);
   }
 
-  removeCoins (amount: number): void {
-    this._coins -= amount
+  removeCoins(amount: number): void {
+    this._coins -= amount;
   }
 
   addPuffle(name: string, puffleType: number): PlayerPuffle {
@@ -359,8 +397,8 @@ export class Penguin {
       type: puffleType,
       clean: 100,
       rest: 100,
-      food: 100
-    }
+      food: 100,
+    };
     this._puffles.set(id, puffle);
 
     return puffle;
@@ -378,7 +416,7 @@ export class Penguin {
     return this._backyard.has(puffle);
   }
 
-  makeAgent (): void {
+  makeAgent(): void {
     this._isAgent = true;
   }
 
@@ -402,11 +440,14 @@ export class Penguin {
     this._safeChat = false;
   }
 
-  receivePostcard(postcard: number, info: {
-    senderId?: number
-    senderName?: string
-    details?: string    
-  }): Mail {
+  receivePostcard(
+    postcard: number,
+    info: {
+      senderId?: number;
+      senderName?: string;
+      details?: string;
+    },
+  ): Mail {
     this._mailSeq += 1;
     const uid = this._mailSeq;
     const senderName = info.senderName ?? 'sys';
@@ -416,15 +457,15 @@ export class Penguin {
     const mail = {
       sender: {
         name: senderName,
-        id: senderId
+        id: senderId,
       },
       postcard: {
         postcardId: postcard,
         uid,
         details,
         timestamp,
-        read: false
-      }
+        read: false,
+      },
     };
     this._mail.push(mail);
     return mail;
@@ -433,8 +474,8 @@ export class Penguin {
   setAllMailAsRead(): void {
     this._mail = this._mail.map((mail) => {
       const postcard = { ...mail.postcard, read: true };
-      return { ...mail, postcard: postcard }
-    })
+      return { ...mail, postcard: postcard };
+    });
   }
 
   getUnreadMailTotal(): number {
@@ -461,7 +502,7 @@ export class Penguin {
     const newAmount = amountOwned + amount;
     if (newAmount > 99) {
       return false;
-    } 
+    }
 
     this._furnitureInventory.set(furniture, newAmount);
     return true;
@@ -541,9 +582,11 @@ export class Penguin {
     }
     const parentItem = PUFFLE_ITEMS.get(item.parentId);
     if (parentItem === undefined) {
-      throw new Error(`Puffle item ${item} doesn't have a valid parent ID (${item.parentId})`);
+      throw new Error(
+        `Puffle item ${item} doesn't have a valid parent ID (${item.parentId})`,
+      );
     }
-    
+
     if (amount < 0 || !Number.isInteger(amount)) {
       throw new Error(`Invalid amount of puffle items added: ${amount}`);
     }
@@ -563,7 +606,7 @@ export class Penguin {
     // only track times you found a treasure in the last 24 hrs
     this._treasureFinds = this._treasureFinds.filter((timestamp) => {
       return now - timestamp < 24 * 60 * 60 * 1000;
-    })
+    });
   }
 
   getTreasureFindsInLastDay(): number {
@@ -621,7 +664,7 @@ export class Penguin {
 
   removeEpfMedals(amount: number): void {
     if (amount < 0 || !Number.isInteger(amount) || isNaN(amount)) {
-      throw new Error (`Incorrect amount of EPF medals removed: ${amount}`);
+      throw new Error(`Incorrect amount of EPF medals removed: ${amount}`);
     }
 
     this._ownedMedals -= amount;
@@ -658,7 +701,7 @@ export class Penguin {
   addIglooLayout(): Igloo {
     this._iglooSeq++;
     const id = this._iglooSeq;
-    const igloo = Penguin.getDefaultIgloo(id)
+    const igloo = Penguin.getDefaultIgloo(id);
     this._igloos.set(id, igloo);
     return igloo;
   }
@@ -764,9 +807,13 @@ export class Penguin {
     this._isSnowNinja = value;
   }
 
-  static getDefaultData(name: string, defaultParams: DefaultPenguinParams = {}): PenguinData {
+  static getDefaultData(
+    name: string,
+    defaultParams: DefaultPenguinParams = {},
+  ): PenguinData {
     return {
       name,
+      password: defaultParams.password,
       is_member: defaultParams.is_member ?? true,
       is_agent: false,
       mascot: 0,
@@ -781,17 +828,20 @@ export class Penguin {
       background: 0,
       coins: 500,
       registration_date: Date.now(),
-      virtualRegistrationTimestamp: defaultParams.virtualRegistrationTimestamp ?? (new Date(2005, 9, 24)).getTime(),
+      virtualRegistrationTimestamp:
+        defaultParams.virtualRegistrationTimestamp ??
+        new Date(2005, 9, 24).getTime(),
       minutes_played: 0,
       inventory: [1],
       stamps: [],
-      stampbook: { // TODO: enums for the options
+      stampbook: {
+        // TODO: enums for the options
         color: 1,
         highlight: 1,
         pattern: 0,
         icon: 1,
         stamps: [],
-        recent_stamps: []
+        recent_stamps: [],
       },
       puffleSeq: 0,
       puffles: [],
@@ -802,7 +852,7 @@ export class Penguin {
       rainbow: {
         adoptability: false,
         currentTask: 0,
-        coinsCollected: []
+        coinsCollected: [],
       },
       igloo: 1,
       igloos: [Penguin.getDefaultIgloo(1)],
@@ -821,11 +871,15 @@ export class Penguin {
       isNinja: false,
       senseiAttempts: 0,
       cardWins: 0,
-      battleOfDoom: false
-    }
+      battleOfDoom: false,
+    };
   }
 
-  static getDefault(id: number, name: string, defaultParams: DefaultPenguinParams = {}): Penguin {
+  static getDefault(
+    id: number,
+    name: string,
+    defaultParams: DefaultPenguinParams = {},
+  ): Penguin {
     return new Penguin(id, Penguin.getDefaultData(name, defaultParams));
   }
 
@@ -837,7 +891,7 @@ export class Penguin {
       furniture: [],
       locked: true,
       location: 1,
-      id
+      id,
     };
   }
 
