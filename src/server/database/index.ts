@@ -299,6 +299,7 @@ class JsonDatabase {
       const id = Number(idMatch[0]);
       const content = fs.readFileSync(path.join(subDir, file), { encoding: 'utf-8' });
       const data = JSON.parse(content);
+      if (data.coins === null) data.coins = Infinity
       if (isString && data[property].toLowerCase() === value.toLowerCase()) {
         return [data, id];
       } else if (data[property] === value) {
