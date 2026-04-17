@@ -247,7 +247,7 @@ export class Penguin {
   }
 
   get coins() {
-    return this._coins;
+    return Math.min(this._coins, Number.MAX_SAFE_INTEGER);
   }
 
   set color(id: number) {
