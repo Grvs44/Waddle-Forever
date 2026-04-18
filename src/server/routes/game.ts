@@ -114,6 +114,7 @@ export function createHttpServer(settingsManager: SettingsManager): HttpServer {
     return `default/websites/${name}.html`;
   });
 
+  server.get('/ruffle', () => 'default/websites/ruffle.html');
 
   // Engine 3 login page requires this URL
   server.get('/#/login', () => {
